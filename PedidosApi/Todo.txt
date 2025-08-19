@@ -1,0 +1,9 @@
+--- STUFF I WANT TO DO ---
+
+- Mostrar los una coleccion con los empleados que tengan rol Repartidor, que muestre sus datos y un array con todos los pedidos que han hecho.
+
+- Mostrar coleccion de orden con sus orden details en un array.
+
+- Mostar coleccion de customer con un array de sus ordenes.
+
+- Mostrar coleccion de deliverys con su status history
