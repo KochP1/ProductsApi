@@ -17,6 +17,26 @@ namespace PedidosApi.Controllers
             this.orderService = orderService;
         }
 
+        [HttpGet]
+        public async Task<ActionResult<IEnumerable<OrderDto>>> Get()
+        {
+            var orders = await orderService.GetAllOrders();
+            return Ok(orders);
+        }
+
+        [HttpGet("{id}")]
+        public async Task<ActionResult<OrderDto>> Get(int id)
+        {
+            var order = await orderService.GetOrderById(id);
+
+            if (order == null)
+            {
+                return NotFound();
+            }
+
+            return Ok(order);
+        }
+
         [HttpPost]
         public async Task<ActionResult<CreateOrderDto>> Post(CreateOrderDto createOrderDto)
         {
