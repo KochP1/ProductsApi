@@ -9,6 +9,7 @@ namespace PedidosApi.Interfaces
         public Task<CustomerDto> GetCustomerByIdAsync(int id);
         public Task<IEnumerable<CustomerDto>> GetAllCustomersAsync();
         public Task<CustomerDto> CreateCustomer(CustomerDto customerDto);
+        public Task<CustomerWithOrdersDto> GetCustomerWithOrdersAsync(int id);
         public Task<int> DeleteCustomer(int id);
         public Task<bool> PatchCustomer(JsonPatchDocument<PatchCustomerDto> patchDoc, Customer customerDb);
         public Task<Customer> GetCustomerById(int id);

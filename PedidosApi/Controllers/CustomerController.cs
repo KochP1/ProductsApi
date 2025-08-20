@@ -47,6 +47,17 @@ namespace PedidosApi.Controllers
             }
         }
 
+        [HttpGet("{id}/orders")]
+        public async Task<ActionResult<CustomerWithOrdersDto>> GetCustomerWithOrders(int id)
+        {
+            var customerWithOrders = await customerService.GetCustomerWithOrdersAsync(id);
+            if (customerWithOrders == null)
+            {
+                return NotFound();
+            }
+            return Ok(customerWithOrders);
+        }
+
         [HttpPost]
         public async Task<ActionResult<CustomerDto>> PostCustomer(CustomerDto customerDto)
         {

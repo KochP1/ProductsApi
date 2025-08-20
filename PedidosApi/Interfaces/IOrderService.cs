@@ -1,3 +1,4 @@
+using PedidosApi.DTOS.CustomerDtos;
 using PedidosApi.DTOS.OrderDtos;
 
 namespace PedidosApi.Interfaces

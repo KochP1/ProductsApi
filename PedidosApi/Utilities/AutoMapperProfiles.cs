@@ -16,6 +16,8 @@ namespace PedidosApi.Utilities
             // CUSTOMER
             CreateMap<Customer, CustomerDto>().ReverseMap();
             CreateMap<Customer, PatchCustomerDto>().ReverseMap();
+            CreateMap<Customer, CustomerWithOrdersDto>()
+                .ForMember(dest => dest.Orders, opt => opt.MapFrom(src => src.Orders));
 
             // EMPLOYEE
             CreateMap<Employee, EmployeeDto>().ReverseMap();
@@ -39,7 +41,8 @@ namespace PedidosApi.Utilities
 
             CreateMap<Order, OrderDto>();
             CreateMap<OrderDetail, OrderDetailDto>();
-            CreateMap<Order, OrderWithDetailDto>(); 
+            CreateMap<Order, OrderWithDetailDto>();
+            CreateMap<Order, OrderCustomerDto>().ReverseMap();
 
             // DELIVERY
 

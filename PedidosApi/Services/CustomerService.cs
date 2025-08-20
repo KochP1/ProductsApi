@@ -38,6 +38,16 @@ namespace PedidosApi.Services
             return mapper.Map<IEnumerable<CustomerDto>>(customers);
         }
 
+        public async Task<CustomerWithOrdersDto> GetCustomerWithOrdersAsync(int id)
+        {
+            var customer = await context.Customers
+                .Include(c => c.Orders)
+                .ThenInclude(o => o.OrderDetails)
+                .FirstOrDefaultAsync(c => c.Id == id);
+
+            return mapper.Map<CustomerWithOrdersDto>(customer);
+        }
+
         public async Task<CustomerDto> CreateCustomer(CustomerDto customerDto)
         {
             var customer = mapper.Map<Customer>(customerDto);
