@@ -43,6 +43,8 @@ namespace PedidosApi.Utilities
             CreateMap<OrderDetail, OrderDetailDto>();
             CreateMap<Order, OrderWithDetailDto>();
             CreateMap<Order, OrderCustomerDto>().ReverseMap();
+            CreateMap<Order, PatchOrderDto>().ReverseMap();
+            CreateMap<OrderDetail, PatchOrderDetailDto>().ReverseMap();
 
             // DELIVERY
 
@@ -52,9 +54,9 @@ namespace PedidosApi.Utilities
 
             CreateMap<DeliveryDto, Delivery>().ReverseMap();
             CreateMap<Delivery, DeliveryDto>()
-                .ForMember(dest => dest.DeliveryStatus, opt => opt.MapFrom(src => 
-                    src.DeliveryStatusHistories != null ? 
-                    src.DeliveryStatusHistories.OrderByDescending(dsh => dsh.StatusDate).FirstOrDefault() : 
+                .ForMember(dest => dest.DeliveryStatus, opt => opt.MapFrom(src =>
+                    src.DeliveryStatusHistories != null ?
+                    src.DeliveryStatusHistories.OrderByDescending(dsh => dsh.StatusDate).FirstOrDefault() :
                     null));
 
             CreateMap<DeliveryStatusHistory, DeliveryStatusDto>();

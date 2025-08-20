@@ -1,4 +1,6 @@
+using AutoMapper;
 using Microsoft.AspNetCore.Http.HttpResults;
+using Microsoft.AspNetCore.JsonPatch;
 using Microsoft.AspNetCore.Mvc;
 using PedidosApi.DTOS.OrderDtos;
 using PedidosApi.Interfaces;
@@ -11,10 +13,12 @@ namespace PedidosApi.Controllers
     public class OrderController : ControllerBase
     {
         private readonly IOrderService orderService;
+        private readonly IMapper mapper;
 
-        public OrderController(IOrderService orderService)
+        public OrderController(IOrderService orderService, IMapper mapper)
         {
             this.orderService = orderService;
+            this.mapper = mapper;
         }
 
         [HttpGet]
@@ -66,6 +70,58 @@ namespace PedidosApi.Controllers
             if (record <= 0)
             {
                 return NotFound();
+            }
+
+            return NoContent();
+        }
+
+        [HttpPatch("{id}")]
+        public async Task<IActionResult> Patch(int id, JsonPatchDocument<PatchOrderDto> patchDoc)
+        {
+            var orderDb = await orderService.GetOrderByIdAsync(id);
+            if (orderDb == null)
+            {
+                return NotFound();
+            }
+
+            var orderPatch = mapper.Map<PatchOrderDto>(orderDb);
+            patchDoc.ApplyTo(orderPatch, ModelState);
+
+            if (!TryValidateModel(orderPatch))
+            {
+                return ValidationProblem(ModelState);
+            }
+
+            var result = await orderService.PatchOrder(patchDoc, orderDb);
+            if (!result)
+            {
+                return BadRequest();
+            }
+
+            return NoContent();
+        }
+
+        [HttpPatch("order-detail/{id}")]
+        public async Task<IActionResult> PatchOrderDetail(int id, JsonPatchDocument<PatchOrderDetailDto> patchDoc)
+        {
+            var orderDetailDb = await orderService.GetOrderDetailByIdAsync(id);
+            if (orderDetailDb == null)
+            {
+                return NotFound();
+            }
+
+            var orderDetailPatch = mapper.Map<PatchOrderDetailDto>(orderDetailDb);
+            patchDoc.ApplyTo(orderDetailPatch, ModelState);
+
+            if (!TryValidateModel(orderDetailPatch))
+            {
+                return ValidationProblem(ModelState);
+            }
+
+            var result = await orderService.PatchOrderDetail(patchDoc, orderDetailDb);
+            if (!result)
+            {
+                return BadRequest();
             }
 
             return NoContent();

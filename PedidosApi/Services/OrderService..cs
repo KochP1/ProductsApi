@@ -1,4 +1,5 @@
 ﻿using AutoMapper;
+using Microsoft.AspNetCore.JsonPatch;
 using Microsoft.EntityFrameworkCore;
 using PedidosApi.Data;
 using PedidosApi.DTOS.CustomerDtos;
@@ -35,17 +36,27 @@ namespace PedidosApi.Services
             return mapper.Map<OrderDto>(order);
         }
 
+        public async Task<Order> GetOrderByIdAsync(int id)
+        {
+            return await context.Orders.FindAsync(id);
+        }
+
+        public async Task<OrderDetail> GetOrderDetailByIdAsync(int id)
+        {
+            return await context.OrderDetails.FindAsync(id);
+        }
+
         public async Task<IEnumerable<OrderWithDetailDto>> GetOrderCollection()
         {
-                var orders = await context.Orders
-                    .Include(o => o.Customer)
-                    .Include(o => o.Deliveries)
-                        .ThenInclude(d => d.DeliveryStatusHistories)
-                    .Include(o => o.Deliveries)
-                        .ThenInclude(d => d.DeliveryPerson)
-                    .Include(o => o.OrderDetails)
-                        .ThenInclude(od => od.Product)
-                    .ToListAsync();
+            var orders = await context.Orders
+                .Include(o => o.Customer)
+                .Include(o => o.Deliveries)
+                    .ThenInclude(d => d.DeliveryStatusHistories)
+                .Include(o => o.Deliveries)
+                    .ThenInclude(d => d.DeliveryPerson)
+                .Include(o => o.OrderDetails)
+                    .ThenInclude(od => od.Product)
+                .ToListAsync();
 
             return orders.Select(order => new OrderWithDetailDto
             {
@@ -65,7 +76,7 @@ namespace PedidosApi.Services
                     DeliveryAddress = order.Deliveries.FirstOrDefault()!.DeliveryAddress,
                     CurrentStatus = order.Deliveries.FirstOrDefault()!.CurrentStatus,
                     DeliveryPerson = mapper.Map<EmployeeDto>(order.Deliveries.FirstOrDefault()!.DeliveryPerson),
-                    DeliveryStatus = order.Deliveries.FirstOrDefault()!.DeliveryStatusHistories != null ? 
+                    DeliveryStatus = order.Deliveries.FirstOrDefault()!.DeliveryStatusHistories != null ?
                         mapper.Map<DeliveryStatusDto>(order.Deliveries.FirstOrDefault()!.DeliveryStatusHistories
                             .OrderByDescending(dsh => dsh.StatusDate)
                             .FirstOrDefault()) : null
@@ -148,9 +159,48 @@ namespace PedidosApi.Services
             return true;
         }
 
-        public async Task<int> DeleteOrder(int id){
+        public async Task<int> DeleteOrder(int id)
+        {
             var record = await context.Orders.Where(x => x.Id == id).ExecuteDeleteAsync();
             return record;
+        }
+
+        public async Task<bool> PatchOrder(JsonPatchDocument<PatchOrderDto> patchDoc, Order orderDb)
+        {
+            try
+            {
+                var orderPatchDto = mapper.Map<PatchOrderDto>(orderDb);
+
+                patchDoc.ApplyTo(orderPatchDto);
+
+                mapper.Map(orderPatchDto, orderDb);
+
+                await context.SaveChangesAsync();
+                return true;
+            }
+            catch (Exception)
+            {
+                return false;
+            }
+        }
+        
+        public async Task<bool> PatchOrderDetail(JsonPatchDocument<PatchOrderDetailDto> patchDoc, OrderDetail orderDb)
+        {
+            try
+            {
+                var orderPatchDto = mapper.Map<PatchOrderDetailDto>(orderDb);
+                
+                patchDoc.ApplyTo(orderPatchDto);
+                
+                mapper.Map(orderPatchDto, orderDb);
+
+                await context.SaveChangesAsync();
+                return true;
+            }
+            catch (Exception)
+            {
+                return false;
+            }
         }
     }
 }
