@@ -26,6 +26,11 @@ namespace PedidosApi.Controllers
             try
             {
                 var product = await productoService.GetProductoByIdAsync(id);
+
+                if (product is null)
+                {
+                    return NotFound();
+                }
                 return Ok(product);
             }
             catch (Exception ex)

@@ -10,6 +10,7 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddScoped<ICustomerService, CustomerService>();
 builder.Services.AddScoped<IEmployeeService, EmployeeService>();
 builder.Services.AddScoped<IProductoService, ProductService>();
+builder.Services.AddScoped<IOrderService, OrderService>();
 
 builder.Services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
 
@@ -19,6 +20,8 @@ builder.Services.AddDbContext<ApplicationDbContext>(opciones => opciones.UseSqlS
 
 var app = builder.Build();
 app.MapControllers();
+app.Urls.Clear();  // ← Limpiar puertos predeterminados
+app.Urls.Add("http://localhost:5257");
 
 // Middleware
 
