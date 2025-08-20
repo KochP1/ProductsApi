@@ -64,6 +64,8 @@ namespace PedidosApi.Utilities
             CreateMap<CreateDeliveryStatusDto, DeliveryStatusHistory>()
             .ForMember(dest => dest.StatusDate, opt => opt.MapFrom(src => src.StatusDate ?? DateTime.UtcNow));
             CreateMap<DeliveryStatusHistory, DeliveryStatusDto>();
+            CreateMap<Delivery, PatchDeliveryDto>().ReverseMap();
+            CreateMap<DeliveryStatusHistory, PatchDeliveryStatusDto>().ReverseMap();
 
         }
     }
