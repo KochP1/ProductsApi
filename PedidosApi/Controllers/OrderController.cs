@@ -38,7 +38,7 @@ namespace PedidosApi.Controllers
         }
 
         [HttpPost]
-        public async Task<ActionResult<CreateOrderDto>> Post(CreateOrderDto createOrderDto)
+        public async Task<ActionResult<OrderWithDetailDto>> Post(CreateOrderDto createOrderDto)
         {
             var customerExist = await orderService.ValidateCustomer(createOrderDto);
 

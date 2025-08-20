@@ -1,3 +1,5 @@
+using PedidosApi.DTOS.DeliveryDtos;
+
 namespace PedidosApi.DTOS.OrderDtos
 {
     public class CreateOrderDto
@@ -12,6 +14,7 @@ namespace PedidosApi.DTOS.OrderDtos
         public string? Status { get; set; }
 
         public string ShippingAddress { get; set; } = null!;
+        public CreateDeliveryDto Delivery { get; set; } = null!;
         public List<CreateOrderDetailDto> OrderDetail { get; set; } = [];
     }
 }

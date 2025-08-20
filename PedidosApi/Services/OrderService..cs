@@ -2,6 +2,8 @@
 using Microsoft.EntityFrameworkCore;
 using PedidosApi.Data;
 using PedidosApi.DTOS.CustomerDtos;
+using PedidosApi.DTOS.DeliveryDtos;
+using PedidosApi.DTOS.EmployeeDtos;
 using PedidosApi.DTOS.OrderDetailDtos;
 using PedidosApi.DTOS.OrderDtos;
 using PedidosApi.Interfaces;
@@ -28,17 +30,22 @@ namespace PedidosApi.Services
 
         public async Task<OrderDto> GetOrderById(int id)
         {
-            var order = await context.Orders.Include(x => x.Customer).Where(x => x.Id == id).FirstOrDefaultAsync();
+            var order = await context.Orders.Include(x => x.Deliveries)
+            .Include(x => x.Customer).Where(x => x.Id == id).FirstOrDefaultAsync();
             return mapper.Map<OrderDto>(order);
         }
 
         public async Task<IEnumerable<OrderWithDetailDto>> GetOrderCollection()
         {
-            var orders = await context.Orders
-                .Include(o => o.Customer)
-                .Include(o => o.OrderDetails)
-                .ThenInclude(od => od.Product)
-                .ToListAsync();
+                var orders = await context.Orders
+                    .Include(o => o.Customer)
+                    .Include(o => o.Deliveries)
+                        .ThenInclude(d => d.DeliveryStatusHistories)
+                    .Include(o => o.Deliveries)
+                        .ThenInclude(d => d.DeliveryPerson)
+                    .Include(o => o.OrderDetails)
+                        .ThenInclude(od => od.Product)
+                    .ToListAsync();
 
             return orders.Select(order => new OrderWithDetailDto
             {
@@ -48,27 +55,70 @@ namespace PedidosApi.Services
                 Status = order.Status,
                 ShippingAddress = order.ShippingAddress,
                 Customer = mapper.Map<CustomerDto>(order.Customer),
-                OrderDetails = mapper.Map<List<OrderDetailDto>>(order.OrderDetails)
+                OrderDetails = mapper.Map<List<OrderDetailDto>>(order.OrderDetails),
+                Delivery = order.Deliveries.FirstOrDefault() != null ? new DeliveryDto
+                {
+                    Id = order.Deliveries.FirstOrDefault()!.Id,
+                    OrderId = order.Deliveries.FirstOrDefault()!.OrderId,
+                    EstimatedDelivery = order.Deliveries.FirstOrDefault()!.EstimatedDelivery,
+                    ActualDelivery = order.Deliveries.FirstOrDefault()!.ActualDelivery,
+                    DeliveryAddress = order.Deliveries.FirstOrDefault()!.DeliveryAddress,
+                    CurrentStatus = order.Deliveries.FirstOrDefault()!.CurrentStatus,
+                    DeliveryPerson = mapper.Map<EmployeeDto>(order.Deliveries.FirstOrDefault()!.DeliveryPerson),
+                    DeliveryStatus = order.Deliveries.FirstOrDefault()!.DeliveryStatusHistories != null ? 
+                        mapper.Map<DeliveryStatusDto>(order.Deliveries.FirstOrDefault()!.DeliveryStatusHistories
+                            .OrderByDescending(dsh => dsh.StatusDate)
+                            .FirstOrDefault()) : null
+                } : null
             });
         }
 
-        public async Task<CreateOrderDto> CreateOrder(CreateOrderDto newOrder)
+        public async Task<OrderWithDetailDto> CreateOrder(CreateOrderDto newOrder)
         {
-            var order = mapper.Map<Order>(newOrder);
-            order.OrderDate = DateTime.UtcNow;
-
-            foreach (var detail in order.OrderDetails)
+            // 1. Crear Order
+            var order = new Order
             {
-                detail.Subtotal = detail.Quantity * detail.UnitPrice;
-            }
+                CustomerId = newOrder.CustomerId,
+                ShippingAddress = newOrder.ShippingAddress,
+                OrderDate = DateTime.UtcNow,
+                Status = "Pendiente"
+            };
+
+            // 2. Crear OrderDetails
+            order.OrderDetails = newOrder.OrderDetail.Select(od => new OrderDetail
+            {
+                ProductId = od.ProductId,
+                Quantity = od.Quantity,
+                UnitPrice = od.UnitPrice,
+                Subtotal = od.Quantity * od.UnitPrice
+            }).ToList();
 
             order.TotalAmount = order.OrderDetails.Sum(od => od.Subtotal ?? 0);
+
+            // 3. Crear Delivery
+            var delivery = new Delivery
+            {
+                DeliveryAddress = newOrder.Delivery.DeliveryAddress,
+                DeliveryPersonId = newOrder.Delivery.DeliveryPersonId,
+                EstimatedDelivery = newOrder.Delivery.EstimatedDelivery ?? DateTime.UtcNow.AddDays(3),
+                CurrentStatus = newOrder.Delivery.DeliveryStatus.Status,
+                DeliveryStatusHistories = new List<DeliveryStatusHistory>()
+                {
+                    new DeliveryStatusHistory
+                    {
+                        Status = newOrder.Delivery.DeliveryStatus.Status,
+                        StatusDate = DateTime.UtcNow,
+                        Notes = newOrder.Delivery.DeliveryStatus.Notes
+                    }
+                }
+            };
+
+            order.Deliveries = new List<Delivery> { delivery };
 
             context.Orders.Add(order);
             await context.SaveChangesAsync();
 
-            var response = mapper.Map<CreateOrderDto>(order);
-            return response;
+            return mapper.Map<OrderWithDetailDto>(order);
         }
 
         public async Task<bool> ValidateCustomer(CreateOrderDto createOrderDto)

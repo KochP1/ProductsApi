@@ -13,5 +13,6 @@ namespace PedidosApi.DTOS.DeliveryDtos
         public string DeliveryAddress { get; set; } = null!;
 
         public string? CurrentStatus { get; set; }
+        public CreateDeliveryStatusDto DeliveryStatus { get; set; } = null!;
     }
 }

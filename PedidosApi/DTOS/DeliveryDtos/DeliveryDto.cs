@@ -16,5 +16,6 @@ namespace PedidosApi.DTOS.DeliveryDtos
 
         public string? CurrentStatus { get; set; }
         public virtual EmployeeDto? DeliveryPerson { get; set; }
+        public virtual DeliveryStatusDto DeliveryStatus { get; set; } = null!;
     }
 }

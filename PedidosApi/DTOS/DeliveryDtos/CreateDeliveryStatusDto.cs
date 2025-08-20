@@ -1,6 +1,6 @@
 namespace PedidosApi.DTOS.DeliveryDtos
 {
-    public class CreateDeliveryStatus
+    public class CreateDeliveryStatusDto
     {
         public int DeliveryId { get; set; }
 
